@@ -1,0 +1,7 @@
+1111111111111111112222222
+11111111111
+33333333
+myRecannot define new methods on non-local type http.Request
+
+
+/Users/apple/Downloads/test.txt
