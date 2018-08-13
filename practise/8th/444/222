@@ -1,0 +1,223 @@
+package controllers
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"zcm_tools/http"
+	"zcm_tools/uuid"
+	"zcmlc_v1/models"
+	"zcmlc_v1/services"
+	"zcmlc_v1/utils"
+
+	"github.com/astaxie/beego"
+	"github.com/go-gomail/gomail"
+)
+
+type CmpayCgController struct {
+	BaseController
+}
+type RandomAmountController struct {
+	beego.Controller
+}
+
+//
+func (this *RandomAmountController) Get() {
+	defer this.ServeJSON()
+	pars, _ := services.GetRandomAmoByRc()
+	// beego.Debug(pars)
+	this.Data["json"] = map[string]interface{}{"ret": 200, "list": pars}
+	// this.Data["catfoodshotchoose"] = "nav_curr"
+	// this.Layout = "layout/layout.html"
+	// this.TplName = "cg/company-amount.html"
+}
+
+//获取打款金额
+func (this *RandomAmountController) Post() {
+	defer this.ServeJSON()
+	company := this.GetString("company")
+	amount, err := services.GetRandomAmount(company)
+	if err != nil {
+		this.Data["json"] = map[string]interface{}{"ret": 304, "msg": err.Error()}
+	}
+	this.Data["json"] = map[string]interface{}{"ret": 200, "amount": amount}
+}
+
+//企业存管管理页面
+func (this *CmpayCgController) CmpayCg() {
+	var condition string
+	//提交时间
+	startDate := this.GetString("startDate")
+	if startDate != "" {
+		condition += " and applyforcg_time>='" + startDate + "' "
+	}
+	endDate := this.GetString("endDate")
+	if endDate != "" {
+		condition += " and applyforcg_time<='" + endDate + "' "
+	}
+	//审核状态
+	state := this.GetString("State")
+	if state != "" {
+		condition += " and cg_state=" + state
+	}
+	//企业名字
+	companyName := this.GetString("companyName")
+	if companyName != "" {
+		condition += " and borrower_name like '%" + companyName + "%' "
+	}
+	//社会信用码
+	companyCode := this.GetString("companyCode")
+	if companyCode != "" {
+		condition += " and id_card like '%" + companyCode + "%' "
+	}
+	bankNo := this.GetString("bankNo")
+	if bankNo != "" {
+		condition += " and bank_card like '%" + bankNo + "%' "
+	}
+	//备注
+	companyRmark := this.GetString("companyRmark")
+	if companyRmark != "" {
+		condition += " and remark like '" + companyRmark + "' "
+	}
+	count, _ := models.GetCountZassetBo(condition) //总记录数
+	begin := this.Paging(count, 15)
+	condition += " ORDER BY id DESC LIMIT " + begin + ",15"
+	cmpany, _ := models.GetZassetBo(condition) //展示的数据
+	this.Data["count"] = count
+	this.Data["cmpany"] = cmpany
+	this.Data["catfoodshotchoose"] = "nav_curr"
+	this.Layout = "layout/layout.html"
+	this.TplName = "cg/company-cg-list.html"
+}
+
+//企业存管新增展示页面
+func (this *CmpayCgController) ShowCmpayCg() {
+	bank, _ := models.GetBankCodeNewAll()
+	a := 0.00
+
+	this.Data["amount"] = a
+	this.Data["bank"] = bank
+	this.Data["details"] = 0
+	this.Data["navname"] = "附属管理"
+	this.Data["menuname"] = "企业存管查看详情"
+	this.Data["catfoodshotchoose"] = "nav_curr"
+	this.Layout = "layout/layout.html"
+	this.TplName = "cg/company-cg-edit.html"
+}
+
+//企业存管新增
+func (this *CmpayCgController) AddCmpayCg() {
+	//企业信用唯一代码
+	companyCode := this.GetString("Company_code")
+	defer func() {
+		os.RemoveAll("./static/company/" + companyCode) //上传后删除本地文件夹
+		this.ServeJSON()
+	}()
+	// //易贷的唯一标识
+	//企业名字
+	companyName := this.GetString("Company_name")
+
+	//企业银行卡号
+	companyBankNo := this.GetString("Company_bank_no")
+	//企业预留手机号
+	companyBankMobile := this.GetString("Company_bank_mobile")
+	//开户支行
+	companyBankbranch := this.GetString("Company_bank_branch")
+	//所属银行
+	bankCode := this.GetString("Bank_name")
+	//备注
+	remark := this.GetString("Remark")
+	err := os.Mkdir("./static/company/"+companyCode, os.ModePerm)
+	if err != nil {
+		this.Data["json"] = map[string]interface{}{"ret": 201, "msg": "创建文件夹失败" + err.Error()}
+		return
+	}
+	//企业备案注册方法
+	//营业执照
+	fileName1 := filepath.Join("./static/company/" + companyCode + "/营业执照.jpg")
+	err = this.SaveToFile("Image_license", fileName1)
+	if err != nil {
+		go utils.SendEmail("[企业备案绑卡注册失败]营业执照获取失败,", "失败原因:"+err.Error(), "wxt@zcmlc.com;zhun@zcmlc.com;wl@zcmlc.com")
+		// this.Data["json"] = map[string]interface{}{"ret": 201, "msg": "营业执照获取失败" + err.Error()}
+		this.Abort("营业执照获取失败," + err.Error())
+		return
+	}
+	//开户行证明、企业账户/流水证明
+	fileName2 := filepath.Join("./static/company/" + companyCode + "/企业流水.jpg")
+	err = this.SaveToFile("Image_accounts", fileName2)
+	if err != nil {
+		go utils.SendEmail("[企业备案绑卡注册失败]企业账户/流水证明获取失败,", "失败原因:"+err.Error(), "wxt@zcmlc.com;zhun@zcmlc.com;wl@zcmlc.com")
+		// this.Data["json"] = map[string]interface{}{"ret": 201, "msg": "企业账户/流水证明获取失败" + err.Error()}
+		this.Abort("企业账户/流水证明获取失败," + err.Error())
+		return
+	}
+	cm := models.CmpayCg{
+		CompanyCode:       companyCode,
+		CompanyName:       companyName,
+		CompanyBankNo:     companyBankNo,
+		CompanyBankMobile: companyBankMobile,
+		CompanyBankbranch: companyBankbranch,
+		BankCode:          bankCode,
+		Remark:            remark,
+		OidPlat:           "201709132003542",
+		BusCode:           "aa57995a75f0fad528a5360e7db054b2",
+		FileName1:         fileName1,
+		FileName2:         fileName2,
+	}
+	msg, err := services.AddCmpayCg(cm) //更改后的方法
+	if err != nil {
+		this.Data["json"] = map[string]interface{}{"ret": 403, "msg": msg + err.Error()}
+		return
+	}
+	contentstr := "企业名字：" + companyName + ";统一社会信用代码：" + companyCode
+	this.Logging("企业备案审核发送成功", contentstr, "", 1)
+	this.Data["json"] = map[string]interface{}{"ret": 200}
+	return
+
+}
+
+//企业存管查看详情
+func (this *CmpayCgController) CmpayCgdetails() {
+	//得到页面的企业借款人ID
+	code := this.GetString("code")
+	//查出企业借款人基础信息
+	zassBow, _ := models.GetZassetBoById(code)
+	//查询金额
+	// beego.Debug(zassBow.BorrowerName)
+	amount, _ := services.GetAmountByRc(zassBow.BorrowerName)
+	this.Data["amount"] = amount
+
+	bank, _ := models.GetBankCodeNewAll()
+	this.Data["bank"] = bank
+	//查出企业借款人的附件信息
+	// beego.Debug(zassBow.Guid)
+	license, _ := models.GetZassetBolicense(zassBow.Guid, "7") //营业执照
+	prove, _ := models.GetZassetBolicense(zassBow.Guid, "8")   //企业流水
+	this.Data["navname"] = "附属管理"
+	this.Data["menuname"] = "企业存管查看详情"
+	this.Data["license"] = license
+	this.Data["prove"] = prove
+	this.Data["list"] = zassBow
+	this.Data["details"] = 1
+	this.Data["catfoodshotchoose"] = "nav_curr"
+	this.Layout = "layout/layout.html"
+	this.TplName = "cg/company-cg-edit.html"
+}
+
+//后台手动修改失败
+func (this *CmpayCgController) UpdateZaBrState() {
+	//得到页面的企业借款人ID
+	defer this.ServeJSON()
+	code := this.GetString("code")
+	err := models.UpdZaBorState(code)
+	if err != nil {
+		beego.Debug("修改存管状态失败", err)
+		this.Data["json"] = map[string]interface{}{"ret": 404, "msg": "修改存管失败状态失败！" + err.Error()}
+		return
+	}
+	this.Data["json"] = map[string]interface{}{"ret": 200}
+	return
+}
