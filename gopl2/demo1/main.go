@@ -2,16 +2,29 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"time"
 )
 
-//ch2
 func main() {
-	var s, sep string
+	go spinner(100 * time.Millisecond)
+	const n = 45
+	fibN := fib(n)
+	fmt.Printf("\rFibonacci(%d)=%d\n", n, fibN)
+}
 
-	for i := 1; i < len(os.Args); i++ {
-		s += sep + os.Args[i]
-		sep = " "
+func spinner(delay time.Duration) {
+	for {
+		for _, r := range `-\|/` {
+			fmt.Printf("\r%c", r)
+			time.Sleep(delay)
+		}
 	}
-	fmt.Println(s)
+}
+
+func fib(x int) int {
+
+	if x < 2 {
+		return x
+	}
+	return fib(x-1) + fib(x-2)
 }
