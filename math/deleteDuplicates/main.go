@@ -44,6 +44,9 @@ func deleteDuplicates(head *ListNode) *ListNode {
 	var a *ListNode
 	a = head
 	for a != nil && a.Next != nil {
+		fmt.Println(a.Val)
+		fmt.Println(a.Next.Val)
+
 		if a.Val == a.Next.Val {
 			a.Next = a.Next.Next
 		} else {
