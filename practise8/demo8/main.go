@@ -2,21 +2,26 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 )
 
 func main() {
-
-	var a = []int{1, 2, 3, 4, 5, 6, 34, 2, 2, 3, 4, 4, 23, 2, 2, 2, 2, 2, 1, 3, 4, 1, 4, 4, 2, 4, 1}
-	t1 := time.Now().UnixNano()
-	fmt.Println(t1)
-	for i := 0; i < len(a); i++ {
-		func(k int) {
-			fmt.Println(a[k])
-		}(i)
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "<html><body>Hello World!</body></html>")
 	}
 
-	t2 := time.Now().UnixNano()
-	fmt.Println(t2 - t1)
+	req := httptest.NewRequest("GET", "http://example.com/foo", nil)
+	w := httptest.NewRecorder()
+	handler(w, req)
+
+	resp := w.Result()
+	body, _ := ioutil.ReadAll(resp.Body)
+
+	fmt.Println(resp.StatusCode)
+	fmt.Println(resp.Header.Get("Content-Type"))
+	fmt.Println(string(body))
 
 }
