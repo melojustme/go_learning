@@ -2,27 +2,20 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"strconv"
+	"strings"
 )
 
 func main() {
 
-	var a = []int{1, 2, 3, 4, 5, 6, 34, 2, 2, 3, 4, 4, 23, 2, 2, 2, 2, 2, 1, 3, 4, 1, 4, 4, 2, 4, 1}
-	var ch = make(chan bool, len(a))
-	t1 := time.Now().UnixNano()
-	fmt.Println(t1)
-	for i := 0; i < len(a); i++ {
-		go func(k int) {
-			fmt.Println(a[k])
-		}(i)
-		ch <- true
-	}
-	for i := 0; i < len(a); i++ {
-		<-ch
-		time.Sleep(time.Millisecond * 50)
-
-	}
-	t2 := time.Now().UnixNano()
-	fmt.Println(t2 - t1)
-
+}
+func Ip2Long(ip string) (ips string) {
+	var ip_pieces = strings.Split(ip, ".")
+	ip_1, _ := strconv.ParseInt(ip_pieces[0], 10, 32)
+	ip_2, _ := strconv.ParseInt(ip_pieces[1], 10, 32)
+	ip_3, _ := strconv.ParseInt(ip_pieces[2], 10, 32)
+	ip_4, _ := strconv.ParseInt(ip_pieces[3], 10, 32)
+	var ip_bin string = fmt.Sprintf("%08b%08b%08b%08b", ip_1, ip_2, ip_3, ip_4)
+	ip_int, _ := strconv.ParseInt(ip_bin, 2, 64)
+	return
 }
