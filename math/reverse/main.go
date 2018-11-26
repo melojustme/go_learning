@@ -7,14 +7,47 @@ import (
 
 func main() {
 
-	a := 1534236469
+	a := 1112222
 	b := reverse(a)
 	fmt.Println(b)
 	// s := "1234567890"
 	// fmt.Println(reverseString(s))
 }
-
 func reverse(x int) int {
+
+	//
+	if x < 0 {
+		y := ^x + 1 //
+		a := 0
+		for y != 0 {
+			rem := y % 10
+			a = a*10 + rem
+			y = y / 10
+		}
+		if a*-1 > 2147483647 || a*-1 < -2147483648 {
+			return 0
+		}
+		return a * -1
+	}
+	//
+	if x > 0 {
+		y := x
+		a := 0
+		for y != 0 {
+			rem := y % 10
+			a = a*10 + rem
+			y = y / 10
+		}
+		if a > 2147483647 || a < -2147483648 {
+			return 0
+		}
+		return a
+	}
+
+	return 0
+}
+
+func reverse2(x int) int {
 
 	if x > 0 {
 		a := strconv.Itoa(x)
