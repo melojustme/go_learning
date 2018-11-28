@@ -1,0 +1,11 @@
+
+
+
+
+
+
+{{range $k,$v := .list}}
+<video src="{{$v.Src}}" width="320" height="240" controls="controls">
+    {{$v.Name}}
+</video>
+{{end}}
