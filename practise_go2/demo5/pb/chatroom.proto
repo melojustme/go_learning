@@ -1,0 +1,25 @@
+syntax = "proto3"; // 指定proto版本
+package pb;     // 指定包名
+
+option go_package = "pb";
+
+// 定义Chat服务
+service Chat {
+	// 定义SayChat方法
+	rpc SayChat(ChatRequest) returns (ChatResponse) {}
+}
+
+// ChatRequest 请求结构
+message ChatRequest {
+	string roomid = 1;
+	string userid = 2;
+	string message = 3;
+	
+}
+
+// ChatResponse 响应结构
+message ChatResponse {
+	string roomid = 1;
+    string userid = 2;
+	string message = 3;
+}
