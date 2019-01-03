@@ -1,14 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"container/list"
+	"fmt"
+)
 
 func main() {
-	var a *ListNode
-	a.Val = 1
-	a.Next.Val = 2
-	a.Next.Next.Val = 3
-	a.Next.Next.Next.Val = 3
-	fmt.Println(a)
+	w := list.New()
+	w.PushBack("1")
+	w.PushBack(1)
+	w.PushBack(2)
+	w.PushBack("4df")
+	for e := w.Front(); e != nil; e = e.Next() {
+		fmt.Println(e.Value)
+	}
+	fmt.Println(w)
 }
 
 //Definition for singly-linked list.
