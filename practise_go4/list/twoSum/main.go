@@ -1,29 +1,16 @@
 package main
 
 import (
-	"container/list"
 	"fmt"
+	"go_learning/practise_go4/list/twoSum/node"
 )
 
 func main() {
-	w := list.New()
-	w.PushBack("1")
-	w.PushBack(1)
-	w.PushBack(2)
-	w.PushBack("4df")
-	for e := w.Front(); e != nil; e = e.Next() {
-		fmt.Println(e.Value)
-	}
+	w := &node.ListNode{0, nil}
+	w.AddListNode(1)
+	w.AddListNode(4)
+	w.AddListNode(3)
 	fmt.Println(w)
-}
+	w.PrintLink()
 
-//Definition for singly-linked list.
-type ListNode struct {
-	Val  int
-	Next *ListNode
-}
-
-func removeNthFromEnd(head *ListNode, n int) *ListNode {
-
-	return head
 }

@@ -1,0 +1,30 @@
+<html>
+    <a>test</a>
+    <a href="javascript:;" onclick="StateFun(this)">处理</a>
+</html>
+<script src="/static/js/jquery-1.11.2.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    function StateFun(obj){ 
+        var sData =
+        [
+        {
+            name: "a",
+            text: "aaaaaa"
+        },
+        {
+            name: "b",
+            text: "bbbbb"
+        },
+        {
+            name: "c",
+            text: "ccccccc"
+        }
+        ];
+        console.log(sData)
+       str=JSON.stringify(sData);
+        console.log(str)
+       $.post("/test",{id:111,data:str},function(re){
+            console.log(re)
+        })
+}
+</script>
